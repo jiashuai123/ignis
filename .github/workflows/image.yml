@@ -1,0 +1,41 @@
+name: image
+
+# Builds the Ignis image from the agent-gateway-plugin branch (shim parity +
+# ignis-agent-gateway + Copilot for Ignis companion) and pushes it to GHCR.
+# Reuses the upstream build script: multi-arch (amd64+arm64), tagged with the
+# package.json version and latest. Auth uses the built-in GITHUB_TOKEN —
+# no PAT required.
+
+on:
+  push:
+    branches:
+      - agent-gateway-plugin
+  workflow_dispatch:
+
+env:
+  IGNIS_IMAGE: ghcr.io/jiashuai123/ignis
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      # packages:write lets GITHUB_TOKEN push to ghcr.io/jiashuai123/*.
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The runner is amd64; arm64 needs QEMU for the multi-arch manifest.
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # build-image.js creates its own buildx builder and tags
+      # <IGNIS_IMAGE>:<version> and <IGNIS_IMAGE>:latest.
+      - name: Build and push
+        run: node apps/ignis-server/scripts/build-image.js --push

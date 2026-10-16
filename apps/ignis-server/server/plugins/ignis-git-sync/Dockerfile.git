@@ -1,0 +1,12 @@
+# Rebuild the Ignis image with git available for ignis-git-sync.
+# The stock nobbe/ignis image (node:22-slim) does not include git.
+#
+# Usage:
+#   docker build -t nobbe/ignis:git -f Dockerfile.git .
+#   # then in docker-compose.yml: image: nobbe/ignis:git
+
+FROM nobbe/ignis:latest
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    && rm -rf /var/lib/apt/lists/*

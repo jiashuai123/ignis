@@ -32,6 +32,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   ca-certificates curl gosu \
   && rm -rf /var/lib/apt/lists/*
 
+# ACP agent CLI for the ignis-agent-gateway plugin: the gateway spawns
+# `opencode acp` inside this container. Auth is never baked into the image —
+# it comes from the mounted data volume (opencode auth.json) or the
+# plugin's agents.json env overrides at runtime.
+RUN npm install -g opencode-ai
+
 WORKDIR /app
 
 # Workspace package.jsons + lockfile so npm ci sets up the @ignis/* symlinks.
