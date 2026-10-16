@@ -15,6 +15,8 @@ import * as utilShim from "./node/util.js";
 import { constantsShim } from "./node/constants.js";
 import { assertShim } from "./node/assert.js";
 import * as streamShim from "./node/stream.js";
+import * as asyncHooksShim from "./node/async-hooks.js";
+import * as readlineShim from "./node/readline.js";
 import { wrapWithProxy, installDebugHelpers } from "./debug.js";
 
 const rawRegistry = {
@@ -38,6 +40,8 @@ const rawRegistry = {
   constants: constantsShim,
   assert: assertShim,
   stream: streamShim,
+  async_hooks: asyncHooksShim,
+  readline: readlineShim,
 };
 
 const shimRegistry = {};

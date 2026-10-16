@@ -106,3 +106,19 @@ export class EventEmitter {
 }
 
 export default EventEmitter;
+
+// Node parity: events.setMaxListeners(n, ...targets) is both a module-level
+// export and a static on the EventEmitter class (in Node the events module IS
+// the class). Plugins such as Copilot 4.x read EventEmitter.setMaxListeners
+// and expect a function; without it they crash on load.
+export function setMaxListeners(n, ...targets) {
+  for (const target of targets) {
+    if (target && typeof target.setMaxListeners === "function") {
+      target.setMaxListeners(n);
+    }
+  }
+
+  return undefined;
+}
+
+EventEmitter.setMaxListeners = setMaxListeners;
