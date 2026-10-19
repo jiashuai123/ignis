@@ -10,4 +10,10 @@ vaults
 data
 tmp
 **/dist
+# Prebuilt browser companions of server plugins (e.g. ignis-agent-gateway's
+# Copilot for Ignis bundle) are committed artifacts, not build outputs: re-include
+# them so the production image can serve /<bundledPluginId>.js. Upstream companions
+# like headless-sync's are generated during the build stage and stay excluded.
+!apps/ignis-server/server/plugins/*/obsidian/dist/
+!apps/ignis-server/server/plugins/*/obsidian/dist/**
 apps/ignis-server/server/build-info.json
