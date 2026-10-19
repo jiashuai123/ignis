@@ -165,4 +165,12 @@ else
 fi
 
 # Run as the determined user
+# gosu does not reset the environment, so without this the server (and the
+# ACP agents it spawns) inherit root's HOME and cannot read credentials
+# written to the run user's home directory.
+RUN_HOME=$(getent passwd "$RUN_USER" | cut -d: -f6)
+if [ -n "$RUN_HOME" ] && [ -d "$RUN_HOME" ]; then
+  export HOME="$RUN_HOME"
+fi
+
 exec gosu "$RUN_USER" node /app/apps/ignis-server/server/index.js
