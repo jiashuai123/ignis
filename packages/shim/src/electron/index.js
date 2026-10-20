@@ -11,6 +11,31 @@ export const electronShim = {
   nativeImage: nativeImageShim,
   clipboard: clipboardShim,
 
+  // Browsers cannot open arbitrary local paths or system dialogs; external
+  // links are the one piece plugins genuinely need (release notes, auth
+  // pages, issue reporters), so route those to a new tab. Schemes are
+  // restricted the same way Obsidian restricts openLinkText externally.
+  shell: {
+    openExternal(url) {
+      let parsed;
+      try {
+        parsed = new URL(String(url));
+      } catch {
+        return Promise.reject(new Error(`openExternal: invalid URL: ${url}`));
+      }
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        return Promise.reject(new Error(`openExternal: refused ${parsed.protocol} URL`));
+      }
+      window.open(parsed.href, "_blank", "noopener");
+      return Promise.resolve();
+    },
+    openPath() {
+      return Promise.reject(new Error("openPath is not available in the browser"));
+    },
+    showItemInFolder() {},
+    beep() {},
+  },
+
   safeStorage: {
     isEncryptionAvailable() {
       return false;
