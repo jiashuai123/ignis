@@ -151,14 +151,21 @@ export function loadVirtualPlugin(entry) {
     );
 
     const PluginClass = module.exports.default || module.exports;
-    const instance = new PluginClass(window.app, entry.manifest);
+    // Obsidian's own loader injects manifest.dir (".obsidian/plugins/<id>")
+    // when loading from disk; Plugin.saveData/loadData build their paths from
+    // it. Without it, virtual plugins read/write "undefined/data.json".
+    const manifest = {
+      ...entry.manifest,
+      dir: entry.manifest?.dir ?? `.obsidian/plugins/${entry.id}`,
+    };
+    const instance = new PluginClass(window.app, manifest);
 
     // _loaded = true makes instance.unload() walk the Plugin's _register list later.
     // Cleans up addCommand / addStatusBarItem / addRibbonIcon / addSettingTab / registerEvent.
     instance._loaded = true;
     await instance.onload();
 
-    window.__ignis.plugins[entry.id] = { instance, manifest: entry.manifest };
+    window.__ignis.plugins[entry.id] = { instance, manifest };
 
     window.dispatchEvent(
       new CustomEvent("ignis:virtual-plugin-loaded", {
