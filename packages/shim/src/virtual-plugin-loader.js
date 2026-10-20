@@ -10,6 +10,23 @@ const EXTRACTOR_PATH = EXTRACTOR_DIR + "/main.js";
 const EXTRACTOR_SRC = `
 const obsidian = require("obsidian");
 window.__ignisCapturedObsidian = obsidian;
+window.__ignisCapturedHostModules = {};
+for (const name of [
+  "@codemirror/state",
+  "@codemirror/view",
+  "@codemirror/language",
+  "@codemirror/commands",
+  "@codemirror/search",
+  "@codemirror/autocomplete",
+  "@codemirror/lint",
+  "@lezer/common",
+  "@lezer/highlight",
+  "@lezer/lr",
+]) {
+  try {
+    window.__ignisCapturedHostModules[name] = require(name);
+  } catch {}
+}
 module.exports = class extends obsidian.Plugin {
   onload() {}
 };
@@ -82,6 +99,18 @@ export async function extractObsidianModule() {
 
   window.__ignis.obsidian = captured;
   registerShim("obsidian", captured);
+
+  // Host-bundled editor modules (CodeMirror/Lezer). Plugins that keep them
+  // external MUST resolve to Obsidian's own instances: a second copy breaks
+  // CM6's instanceof checks ("Unrecognized extension value in extension set")
+  // and takes down note editing. Registered only when the host provides them.
+  const hostModules = window.__ignisCapturedHostModules;
+  delete window.__ignisCapturedHostModules;
+  if (hostModules) {
+    for (const [name, mod] of Object.entries(hostModules)) {
+      if (mod) registerShim(name, mod);
+    }
+  }
 
   console.log("[ignis] obsidian module captured");
   return captured;
